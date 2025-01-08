@@ -1,43 +1,79 @@
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class BankAccountTest {
+public class BankAccountTest {
 
     @Test
-    void testCreateAccount() {
-        BankAccount account = new BankAccount("12345", 1000.0);
-        assertEquals(1000.0, account.getBalance());
+    public void testInitialBalance() {
+        BankAccount account = new BankAccount("12345", 100.0);
+        assertEquals(100.0, account.getBalance());
     }
 
     @Test
-    void testDepositValidAmount() {
-        BankAccount account = new BankAccount("12345", 1000.0);
-        account.deposit(500.0);
-        assertEquals(1500.0, account.getBalance());
+    public void testDeposit() {
+        BankAccount account = new BankAccount("12345", 50.0);
+        account.deposit(50.0);
+        assertEquals(100.0, account.getBalance());
     }
 
     @Test
-    void testDepositInvalidAmount() {
-        BankAccount account = new BankAccount("12345", 1000.0);
-        assertThrows(IllegalArgumentException.class, () -> account.deposit(-100.0));
+    public void testWithdraw() {
+        BankAccount account = new BankAccount("12345", 100.0);
+        account.withdraw(30.0);
+        assertEquals(70.0, account.getBalance());
     }
 
     @Test
-    void testWithdrawValidAmount() {
-        BankAccount account = new BankAccount("12345", 1000.0);
-        account.withdraw(200.0);
-        assertEquals(800.0, account.getBalance());
+    public void testWithdrawInsufficientBalance() {
+        BankAccount account = new BankAccount("12345", 50.0);
+        assertThrows(IllegalArgumentException.class, () -> account.withdraw(60.0));
     }
 
     @Test
-    void testWithdrawInvalidAmount() {
-        BankAccount account = new BankAccount("12345", 1000.0);
-        assertThrows(IllegalArgumentException.class, () -> account.withdraw(1500.0));
+    public void testNegativeDeposit() {
+        BankAccount account = new BankAccount("12345", 50.0);
+        assertThrows(IllegalArgumentException.class, () -> account.deposit(-10.0));
     }
 
     @Test
-    void testWithdrawNegativeAmount() {
-        BankAccount account = new BankAccount("12345", 1000.0);
-        assertThrows(IllegalArgumentException.class, () -> account.withdraw(-200.0));
+    public void testNegativeWithdraw() {
+        BankAccount account = new BankAccount("12345", 50.0);
+        assertThrows(IllegalArgumentException.class, () -> account.withdraw(-10.0));
+    }
+
+    @Test
+    public void testZeroDeposit() {
+        BankAccount account = new BankAccount("12345", 50.0);
+        assertThrows(IllegalArgumentException.class, () -> account.deposit(0.0));
+    }
+
+    @Test
+    public void testZeroWithdraw() {
+        BankAccount account = new BankAccount("12345", 50.0);
+        assertThrows(IllegalArgumentException.class, () -> account.withdraw(0.0));
+    }
+
+    @Test
+    public void testConcurrentAccess() throws InterruptedException {
+        BankAccount account = new BankAccount("12345", 100.0);
+
+        Thread t1 = new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                account.deposit(1);
+            }
+        });
+
+        Thread t2 = new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                account.withdraw(1);
+            }
+        });
+
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+
+        assertEquals(100.0, account.getBalance());
     }
 }
